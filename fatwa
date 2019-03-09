@@ -1,0 +1,47 @@
+#!/usr/bin/env php
+<?php
+
+if (file_exists(__DIR__ . '/../../autoload.php')) {
+    require __DIR__ . '/../../autoload.php';
+} else {
+    require __DIR__ . '/vendor/autoload.php';
+}
+
+use Goutte\Client;
+
+$client = new Client();
+
+$crawler = $client->request('GET', 'http://e-smaf.islam.gov.my/e-smaf/index.php/main/mainv1/fatwa/');
+$data    = [];
+$crawler->filter('article')->each(function($article) use (&$data) {
+    // get id
+    $id = getFatwaId($article->selectLink('baca selanjutnya')->attr('id'));
+    // get title
+    // get category
+    // get tahun
+    // get status pewartaan
+    // get negeri
+    // get keputusan
+    $data[] = [
+        'id'          => $id,
+        'article_url' => getFatwaArticleUrl($id),
+    ];
+});
+
+toJson($data);
+echo count($data) . ' records fetched.' . PHP_EOL;
+
+function toJson($data)
+{
+    file_put_contents(__DIR__ . '/storage/data/' . date('YmdHis') . '.json', json_encode($data, JSON_PRETTY_PRINT));
+}
+
+function getFatwaArticleUrl($value)
+{
+    return 'http://e-smaf.islam.gov.my/e-smaf/index.php/main/mainv1/fatwa/pr/' . $value;
+}
+
+function getFatwaId($value)
+{
+    return str_replace('fatwa-id-', '', $value);
+}
